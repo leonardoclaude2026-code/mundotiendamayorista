@@ -654,6 +654,16 @@ function viewProduct(slug){
     </div>
   </div>`;
 }
+function toggleAvailability(){
+  const inp=document.getElementById('pf-available');
+  const btn=document.getElementById('pf-avail-btn');
+  const isAvail=inp.value==='true';
+  inp.value=isAvail?'false':'true';
+  btn.textContent=isAvail?'🔴 AGOTADO':'🟢 DISPONIBLE';
+  btn.style.background=isAvail?'#fff0f3':'#f0fdf4';
+  btn.style.color=isAvail?'#e11d48':'#16a34a';
+  btn.style.borderColor=isAvail?'#fda4af':'#86efac';
+}
 function vpSetPhoto(src,btn){
   const img=document.getElementById('vp-main-img');
   if(img) img.src=src;
@@ -880,7 +890,12 @@ function openProductModal(id){
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
       <div class="form-group"><label class="form-label">Stock</label><input class="form-input" id="pf-stock" type="number" value="${p?p.stock:0}"></div>
-      <div class="form-group" style="justify-content:flex-end;padding-top:24px;gap:6px"><label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;font-weight:600"><input type="checkbox" id="pf-featured"${p&&p.featured?' checked':''}> Mostrar en Destacados</label><label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;font-weight:600"><input type="checkbox" id="pf-available"${!p||p.available!==false?' checked':''}> Disponible</label></div>
+      <div class="form-group" style="justify-content:flex-end;padding-top:24px"><label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;font-weight:600"><input type="checkbox" id="pf-featured"${p&&p.featured?' checked':''}> Mostrar en Destacados</label></div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Disponibilidad</label>
+      <input type="hidden" id="pf-available" value="${!p||p.available!==false?'true':'false'}">
+      <button type="button" id="pf-avail-btn" onclick="toggleAvailability()" style="height:44px;padding:0 20px;border-radius:var(--radius);border:2px solid;font-size:14px;font-weight:700;cursor:pointer;transition:all .15s;${!p||p.available!==false?'background:#f0fdf4;color:#16a34a;border-color:#86efac':'background:#fff0f3;color:#e11d48;border-color:#fda4af'}">${!p||p.available!==false?'🟢 DISPONIBLE':'🔴 AGOTADO'}</button>
     </div>
     <div class="form-group"><label class="form-label">Descripción (opcional)</label><textarea class="form-input" id="pf-desc" rows="3" placeholder="Características, materiales, uso recomendado..." style="resize:vertical">${p&&p.desc?p.desc:''}</textarea></div>
     <hr style="border:none;border-top:1px solid var(--border);margin:8px 0">
@@ -903,7 +918,7 @@ async function saveProduct(id){
   const priceOld=parseFloat(document.getElementById('pf-old').value)||price;
   const stock=parseInt(document.getElementById('pf-stock').value)||0;
   const featured=document.getElementById('pf-featured').checked;
-  const available=document.getElementById('pf-available').checked;
+  const available=document.getElementById('pf-available').value!=='false';
   const desc=(document.getElementById('pf-desc')?.value||'').trim();
   const rawPhotos=window._pfPhotos||[];
   const productId=id||(Math.max(0,...products.map(p=>p.id))+1);
