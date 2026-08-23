@@ -490,7 +490,7 @@ const CATEGORIES = [
 ];
 
 // ── STATE ───────────────────────────────────────────────────────
-let products = JSON.parse(localStorage.getItem('mto_products') || '[]');
+let products = [];
 let cart = JSON.parse(localStorage.getItem('mto_cart') || '[]');
 let adminSession = sessionStorage.getItem('mto_admin') === 'true';
 
