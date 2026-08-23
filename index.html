@@ -595,15 +595,16 @@ function viewProducts(params){
 function productCard(p){
   const dp=displayPrice(p); const dpo=displayPriceOld(p);
   const disc=pct(dpo,dp);
+  const avail=p.available!==false;
   return `<article class="product-card">
-    <a href="#/producto/${p.slug}" class="product-img-wrap" style="display:flex;text-decoration:none;cursor:pointer">${p.photos&&p.photos[0]?`<img src="${p.photos[0]}" alt="${p.name}" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0">`:catIcon(p.cat)}${disc>0?`<span class="badge-discount">-${disc}% OFF</span>`:''}</a>
+    <a href="#/producto/${p.slug}" class="product-img-wrap" style="display:flex;text-decoration:none;cursor:pointer">${p.photos&&p.photos[0]?`<img src="${p.photos[0]}" alt="${p.name}" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0">`:catIcon(p.cat)}${!avail?`<span style="position:absolute;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;z-index:2"><span style="background:#e11d48;color:#fff;font-size:12px;font-weight:800;letter-spacing:.08em;padding:4px 12px;border-radius:20px">AGOTADO</span></span>`:(disc>0?`<span class="badge-discount">-${disc}% OFF</span>`:'')}</a>
     <div class="product-body">
       <span class="product-cat">${catLabel(p.cat)}</span>
       <h3 class="product-name"><a href="#/producto/${p.slug}">${p.name}</a></h3>
       <div class="product-prices">${dpo>dp?`<span class="price-old">${fmt(dpo)}</span>`:''}<span class="price-new">${fmt(dp)}</span></div>
       <span class="price-mayorista-label">Precio mayorista</span>
     </div>
-    <div class="product-footer"><button class="btn-add" onclick="event.stopPropagation();addToCart(${p.id})"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Agregar</button></div>
+    <div class="product-footer">${avail?`<button class="btn-add" onclick="event.stopPropagation();addToCart(${p.id})"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Agregar</button>`:`<button class="btn-add" disabled style="opacity:.5;cursor:not-allowed">AGOTADO</button>`}</div>
   </article>`;
 }
 
@@ -636,7 +637,7 @@ function viewProduct(slug){
         ${p.desc?`<p style="margin-top:16px;font-size:14px;color:var(--muted);line-height:1.6"><span style="font-size:16px">🛒</span> ${p.desc}</p>`:''}
         <div style="margin-top:8px;font-size:12px;color:var(--muted)">Código: <strong>${p.code||'–'}</strong> &nbsp;·&nbsp; Stock: <strong>${p.stock||0}</strong> unidades</div>
         <div style="margin-top:24px;display:flex;gap:12px;flex-wrap:wrap;align-items:center">
-          <div style="display:flex;align-items:center;gap:0;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden">
+          ${p.available!==false?`<div style="display:flex;align-items:center;gap:0;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden">
             <button onclick="vpQty(-1)" style="width:40px;height:44px;font-size:18px;background:var(--surface);color:var(--fg);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center">−</button>
             <input id="vp-qty" type="number" min="1" value="1" onblur="if(!this.value||parseInt(this.value)<1)this.value=1" style="width:60px;height:44px;text-align:center;font-weight:700;font-size:16px;border:none;background:var(--surface);color:var(--fg);-moz-appearance:textfield;outline:none">
             <button onclick="vpQty(1)" style="width:40px;height:44px;font-size:18px;background:var(--surface);color:var(--fg);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center">+</button>
@@ -644,7 +645,10 @@ function viewProduct(slug){
           <button class="btn-primary" style="flex:1;min-width:180px;justify-content:center;gap:8px;background:linear-gradient(135deg,#ff4d6d,#ff8c42)" onclick="addToCartQty(${p.id},parseInt(document.getElementById('vp-qty').value)||1)">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg>
             Agregar al carrito
-          </button>
+          </button>`:`<div style="display:inline-flex;align-items:center;gap:10px;background:#fff0f3;border:1px solid #fda4af;border-radius:var(--radius);padding:12px 20px">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#e11d48" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <span style="color:#e11d48;font-weight:700;font-size:15px">AGOTADO — No disponible</span>
+          </div>`}
         </div>
       </div>
     </div>
@@ -876,7 +880,7 @@ function openProductModal(id){
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
       <div class="form-group"><label class="form-label">Stock</label><input class="form-input" id="pf-stock" type="number" value="${p?p.stock:0}"></div>
-      <div class="form-group" style="justify-content:flex-end;padding-top:24px"><label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;font-weight:600"><input type="checkbox" id="pf-featured"${p&&p.featured?' checked':''}> Mostrar en Destacados</label></div>
+      <div class="form-group" style="justify-content:flex-end;padding-top:24px;gap:6px"><label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;font-weight:600"><input type="checkbox" id="pf-featured"${p&&p.featured?' checked':''}> Mostrar en Destacados</label><label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;font-weight:600"><input type="checkbox" id="pf-available"${!p||p.available!==false?' checked':''}> Disponible</label></div>
     </div>
     <div class="form-group"><label class="form-label">Descripción (opcional)</label><textarea class="form-input" id="pf-desc" rows="3" placeholder="Características, materiales, uso recomendado..." style="resize:vertical">${p&&p.desc?p.desc:''}</textarea></div>
     <hr style="border:none;border-top:1px solid var(--border);margin:8px 0">
@@ -899,6 +903,7 @@ async function saveProduct(id){
   const priceOld=parseFloat(document.getElementById('pf-old').value)||price;
   const stock=parseInt(document.getElementById('pf-stock').value)||0;
   const featured=document.getElementById('pf-featured').checked;
+  const available=document.getElementById('pf-available').checked;
   const desc=(document.getElementById('pf-desc')?.value||'').trim();
   const rawPhotos=window._pfPhotos||[];
   const productId=id||(Math.max(0,...products.map(p=>p.id))+1);
@@ -921,8 +926,8 @@ async function saveProduct(id){
 
   if(saveBtn){saveBtn.textContent='Guardar';saveBtn.disabled=false;}
 
-  if(id){ const p=products.find(x=>x.id===id); if(p) Object.assign(p,{name,cat,code,price,basePrice:price,priceOld,basePriceOld:priceOld,stock,featured,desc,photos}); }
-  else{ const slug=name.toLowerCase().replace(/[^a-z0-9]+/g,'-').slice(0,60); products.push({id:productId,slug,name,cat,code,price,basePrice:price,priceOld,basePriceOld:priceOld,stock,featured,desc,photos}); }
+  if(id){ const p=products.find(x=>x.id===id); if(p) Object.assign(p,{name,cat,code,price,basePrice:price,priceOld,basePriceOld:priceOld,stock,featured,available,desc,photos}); }
+  else{ const slug=name.toLowerCase().replace(/[^a-z0-9]+/g,'-').slice(0,60); products.push({id:productId,slug,name,cat,code,price,basePrice:price,priceOld,basePriceOld:priceOld,stock,featured,available,desc,photos}); }
   window._pfPhotos=undefined;
   const savedP=id?products.find(x=>x.id===id):products[products.length-1];
   if(window._fsSave&&savedP) window._fsSave(savedP);
