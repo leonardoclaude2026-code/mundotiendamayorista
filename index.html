@@ -306,12 +306,10 @@ onSnapshot(doc(db,'settings','pricing'),(snap)=>{
 
 // Guarda producto (fotos como URLs — ya subidas a Storage)
 window._fsSave = async (p)=>{
-  try{
-    const data={...p};
-    if(!Array.isArray(data.photos)) data.photos=[];
-    if(!data.basePrice) data.basePrice=data.price;
-    await setDoc(doc(db,COLL,String(data.id)),data);
-  }catch(e){showSyncBadge(false,'Error al guardar: '+e.message);}
+  const data={...p};
+  if(!Array.isArray(data.photos)) data.photos=[];
+  if(!data.basePrice) data.basePrice=data.price;
+  await setDoc(doc(db,COLL,String(data.id)),data);
 };
 
 // Elimina producto y sus fotos de Storage
@@ -504,7 +502,7 @@ function displayPriceOld(p){ const b=p.basePriceOld||p.priceOld||0; return b>0?a
 function displayPrice(p){ return applyMarkup(p.price); }
 function displayPriceOld(p){ return p.priceOld>0 ? applyMarkup(p.priceOld) : 0; }
 
-function saveProducts(){ localStorage.setItem('mto_products', JSON.stringify(products)); if(window._fsSave) products.forEach(p=>window._fsSave(p)); }
+function saveProducts(){ /* localStorage no se usa para productos — Firestore es la única fuente */ }
 function saveCart(){ localStorage.setItem('mto_cart', JSON.stringify(cart)); }
 function catLabel(id){ return CATEGORIES.find(c=>c.id===id)?.name || id; }
 function catIcon(id){ return CATEGORIES.find(c=>c.id===id)?.icon || ''; }
@@ -874,7 +872,7 @@ function saveCredentials(){
   document.getElementById('cfg-nu').value='';
 }
 function doLogout(){ adminSession=false; sessionStorage.removeItem('mto_admin'); navigate('#/'); showToast('Sesión cerrada'); }
-function deleteProduct(id){ if(!confirm('¿Eliminar este producto?')) return; products=products.filter(p=>p.id!==id); saveProducts(); if(window._fsDelete) window._fsDelete(id); renderApp(); showToast('Producto eliminado'); }
+function deleteProduct(id){ if(!confirm('¿Eliminar este producto?')) return; products=products.filter(p=>p.id!==id); if(window._fsDelete) window._fsDelete(id); renderApp(); showToast('Producto eliminado'); }
 
 function openProductModal(id){
   const p=id?products.find(x=>x.id===id):null;
@@ -946,8 +944,17 @@ async function saveProduct(id){
   else{ const slug=name.toLowerCase().replace(/[^a-z0-9]+/g,'-').slice(0,60); products.push({id:productId,slug,name,cat,code,price,basePrice:price,priceOld,basePriceOld:priceOld,stock,featured,available,desc,photos}); }
   window._pfPhotos=undefined;
   const savedP=id?products.find(x=>x.id===id):products[products.length-1];
-  if(window._fsSave&&savedP) window._fsSave(savedP);
-  closeModal(); renderApp(); showToast('Producto guardado','success');
+  if(window._fsSave&&savedP){
+    try{
+      await window._fsSave(savedP);
+      closeModal(); renderApp(); showToast('Producto guardado','success');
+    }catch(e){
+      showToast('ERROR: El producto NO se guardó en Firestore. Reintentá.','error');
+      console.error('saveProduct Firestore error:',e);
+    }
+  } else {
+    showToast('ERROR: No hay conexión con Firestore. El producto NO fue guardado.','error');
+  }
 }
 
 function compressImage(file,cb){ const r=new FileReader(); r.onload=e=>{const img=new Image(); img.onload=()=>{const c=document.createElement('canvas'); const sc=Math.min(800/img.width,800/img.height,1); c.width=Math.round(img.width*sc); c.height=Math.round(img.height*sc); c.getContext('2d').drawImage(img,0,0,c.width,c.height); cb(c.toDataURL('image/jpeg',0.75));}; img.src=e.target.result;}; r.readAsDataURL(file); }
