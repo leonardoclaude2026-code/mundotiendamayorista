@@ -586,7 +586,8 @@ function viewProducts(params){
       </div>
     </div>
     ${list.length===0
-      ? `<div class="cart-empty-page"><p style="color:var(--muted)">${products.length===0?'El catálogo está vacío. Los productos se agregan desde administración.':'No se encontraron productos.'}</p></div>`
+      ? `<div class="cart-empty-page"><p style="color:var(--muted)">${products.length===0?'Estamos actualizando el catálogo, volvé en unos minutos.':'No se encontraron productos.'}</p>${products.length===0?`<a href="https://wa.me/5491125048456" target="_blank" style="display:inline-flex;align-items:center;gap:8px;margin-top:12px;background:#25d366;color:#fff;font-weight:700;font-size:14px;padding:10px 20px;border-radius:24px;text-decoration:none">Escribinos por WhatsApp</a>`:''}
+</div>`
       : `<div class="products-grid">${list.map(productCard).join('')}</div>`}
   </div>`;
 }
